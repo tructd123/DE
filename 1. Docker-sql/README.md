@@ -1,5 +1,5 @@
 # Docker Postgres Ingestion Pipeline
-// filepath: e:\Individual\DE-zoomcamp\1. Docker-sql\README.md
+
 ## Tổng quan
 
 Dự án dựng một pipeline đơn giản để tải dữ liệu taxi ở định dạng Parquet từ internet và nạp vào PostgreSQL chạy trong Docker. Toàn bộ môi trường được quản lý bằng `docker-compose`. Ngoài ra còn có pgAdmin để kiểm tra dữ liệu thông qua giao diện web.
@@ -7,7 +7,7 @@ Dự án dựng một pipeline đơn giản để tải dữ liệu taxi ở đ�
 ## Cấu trúc
 
 - `docker-compose.yml`  
-  - `db`: PostgreSQL 14 với thông tin đăng nhập `pipeline_user / pipeline_pass`.  
+  - `db`: PostgreSQL 15 với thông tin đăng nhập `pipeline_user / pipeline_pass`.  
   - `ingest`: build từ `Dockerfile.ingest`, chạy `ingest_data.py` để tải và nạp dữ liệu.  
   - `pgadmin`: giao diện quản lý PostgreSQL (`http://localhost:5050`, đăng nhập `admin@example.com / admin`).
 - `Dockerfile.ingest`: cài đặt Python, wget, pandas, SQLAlchemy, psycopg2-binary và pyarrow, sau đó chạy script ingest.
