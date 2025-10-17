@@ -1,0 +1,15 @@
+# Cấu hình lưu trữ, chỉ định sử dụng Postgres
+storage:
+  postgres:
+    # Cấu hình chi tiết cho kết nối Postgres
+    postgres_db:
+      hostname: postgres
+      username: dagster
+      password: dagster
+      db_name: dagster
+      port: 5432
+
+# Cấu hình để daemon có thể điều phối các lần chạy theo hàng đợi
+run_coordinator:
+  module: dagster._core.run_coordinator
+  class: QueuedRunCoordinator

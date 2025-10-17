@@ -1,0 +1,14 @@
+# Core Dagster library
+dagster
+dagster-postgres
+
+# For webserver UI
+dagster-webserver
+
+# Libraries for the new pipeline
+pandas
+requests
+psycopg2-binary
+dagster-dbt
+dbt-core
+dbt-postgres

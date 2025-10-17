@@ -1,0 +1,116 @@
+volumes:
+  postgres-data:
+    driver: local
+  dagster-home:
+    driver: local
+  zoomcamp-data:
+    driver: local
+
+services:
+  # Database cho metadata của Dagster
+  postgres:
+    image: postgres:15
+    container_name: dagster_postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: dagster
+      POSTGRES_USER: dagster
+      POSTGRES_PASSWORD: dagster
+    networks:
+      - dagster_network
+
+  # Service MỚI: Chuyên chạy code pipeline của bạn
+  dagster_user_code:
+    build:
+      context: ../../flows  # Đường dẫn tới thư mục chứa Dockerfile
+      dockerfile: Dockerfile
+    container_name: dagster_user_code
+    command: dagster api grpc -h 0.0.0.0 -p 4000 -f /opt/dagster/app/repository.py
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      # Biến môi trường cho kết nối database taxi
+      POSTGRES_HOST: postgres_zoomcamp
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: postgres-zoomcamp
+      POSTGRES_USER: kestra # Sửa lại cho đúng với service postgres_zoomcamp
+      POSTGRES_PASSWORD: k3str4 # Sửa lại cho đúng
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+      - ../../flows:/opt/dagster/app
+    networks:
+      - dagster_network
+    depends_on:
+      - postgres_zoomcamp
+  # highlight-end
+
+  # Service chạy giao diện Dagit
+  dagster_webserver:
+    build:
+      context: ../../flows
+      dockerfile: Dockerfile
+    container_name: dagster_webserver
+    command: dagster-webserver -h 0.0.0.0 -p 3000 -w /opt/dagster/app/workspace.yaml
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      DAGSTER_PG_HOST: postgres
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+    ports:
+      - "3000:3000"
+    networks:
+      - dagster_network
+    depends_on:
+      - postgres
+      - dagster_user_code
+
+  # Service chạy tác vụ nền
+  dagster_daemon:
+    build:
+      context: ../../flows
+      dockerfile: Dockerfile
+    container_name: dagster_daemon
+    command: dagster-daemon run
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      DAGSTER_PG_HOST: postgres
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+    networks:
+      - dagster_network
+    depends_on:
+      - postgres
+      - dagster_user_code
+
+  # Database cho dữ liệu taxi
+  postgres_zoomcamp:
+    image: postgres:15
+    container_name: postgres_zoomcamp
+    environment:
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: k3str4
+      POSTGRES_DB: postgres-zoomcamp
+    ports:
+      - "5433:5432" # Đổi cổng public để tránh xung đột
+    volumes:
+      - zoomcamp-data:/var/lib/postgresql/data
+    networks:
+      - dagster_network
+
+  # MỚI: Giao diện quản trị Postgres
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - dagster_network
+    depends_on:
+      - postgres_zoomcamp
+
+networks:
+  dagster_network:
+    driver: bridge

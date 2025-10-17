@@ -1,0 +1,15 @@
+# This file configures dbt to connect to your database.
+# It reads credentials from environment variables for security.
+
+taxi_rides_ny:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST') }}"
+      user: "{{ env_var('POSTGRES_USER') }}"
+      pass: "{{ env_var('POSTGRES_PASSWORD') }}"
+      port: "{{ env_var('POSTGRES_PORT') | int }}"
+      dbname: "{{ env_var('POSTGRES_DB') }}"
+      schema: "{{ env_var('DBT_SCHEMA', 'public') }}"
+      threads: 8

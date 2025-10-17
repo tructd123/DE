@@ -1,0 +1,24 @@
+# Môi trường ảo và file secrets
+.env
+.venv
+venv/
+env/
+__pycache__/
+
+# Các thư mục dữ liệu local của Docker volumes
+# (Dựa trên docker-compose.yml của bạn)
+postgres-data/
+dagster-home/
+zoomcamp-data/
+
+# Các file kết quả và thư viện của dbt
+# (Bên trong thư mục dbt_project của bạn)
+flows/dbt_project/target/
+flows/dbt_project/dbt_packages/
+flows/dbt_project/dbt_modules/
+flows/dbt_project/logs/
+flows/dbt_project/profiles.yml
+
+# Các file hệ điều hành và IDE
+.DS_Store
+.vscode/

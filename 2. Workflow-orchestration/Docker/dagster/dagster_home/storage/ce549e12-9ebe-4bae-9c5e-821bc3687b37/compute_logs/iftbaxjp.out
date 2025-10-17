@@ -1,0 +1,17 @@
+Báo cáo giá trung bình theo thương hiệu:
+               brand  avg_price
+0   Annibale Colombo    2199.99
+1        Bath Trends     799.99
+11             Knoll     499.99
+8      Furniture Co.     299.99
+3             Chanel     129.99
+5               Dior      89.99
+10             Gucci      79.99
+6    Dolce & Gabbana      69.99
+2       Calvin Klein      49.99
+9     Glamour Beauty      19.99
+14      Velvet Touch      14.99
+4     Chic Cosmetics      12.99
+7            Essence       9.99
+13      Nail Couture       8.99
+12               N/A       6.04
