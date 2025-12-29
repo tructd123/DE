@@ -1,0 +1,6 @@
+2025-10-12 02:24:23 +0000 - dagster - DEBUG - getting_started_data_pipeline - 31b3d991-c68a-4f1b-a9b1-f0cefb089041 - 864 - LOGS_CAPTURED - Started capturing logs in process (pid: 864).
+2025-10-12 02:24:23 +0000 - dagster - DEBUG - getting_started_data_pipeline - 31b3d991-c68a-4f1b-a9b1-f0cefb089041 - 864 - extract_products - STEP_START - Started execution of step "extract_products".
+2025-10-12 02:24:38 +0000 - dagster - DEBUG - getting_started_data_pipeline - 31b3d991-c68a-4f1b-a9b1-f0cefb089041 - 864 - extract_products - STEP_OUTPUT - Yielded output "result" of type "[Any]". (Type check passed).
+2025-10-12 02:24:38 +0000 - dagster - DEBUG - getting_started_data_pipeline - 31b3d991-c68a-4f1b-a9b1-f0cefb089041 - extract_products - Writing file at: /opt/dagster/dagster_home/storage/31b3d991-c68a-4f1b-a9b1-f0cefb089041/extract_products/result using PickledObjectFilesystemIOManager...
+2025-10-12 02:24:38 +0000 - dagster - DEBUG - getting_started_data_pipeline - 31b3d991-c68a-4f1b-a9b1-f0cefb089041 - 864 - extract_products - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-10-12 02:24:38 +0000 - dagster - DEBUG - getting_started_data_pipeline - 31b3d991-c68a-4f1b-a9b1-f0cefb089041 - 864 - extract_products - STEP_SUCCESS - Finished execution of step "extract_products" in 15.46s.

@@ -1,0 +1,60 @@
+volumes:
+  postgres-data:
+    driver: local
+  dagster-home:
+    driver: local
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: dagster
+      POSTGRES_USER: dagster
+      POSTGRES_PASSWORD: dagster
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  dagster_webserver:
+    build:
+      context: ../../flows
+      dockerfile: Dockerfile
+    command: dagster-webserver -h 0.0.0.0 -p 3000 
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      DAGSTER_PG_HOST: postgres
+      DAGSTER_PG_PORT: "5432"
+      DAGSTER_PG_DATABASE: dagster
+      DAGSTER_PG_USER: dagster
+      DAGSTER_PG_PASSWORD: dagster
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+      - ../../flows:/opt/dagster/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  dagster_daemon:
+    build:
+      context: ../../flows
+      dockerfile: Dockerfile
+    command: dagster-daemon run
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      DAGSTER_PG_HOST: postgres
+      DAGSTER_PG_PORT: "5432"
+      DAGSTER_PG_DATABASE: dagster
+      DAGSTER_PG_USER: dagster
+      DAGSTER_PG_PASSWORD: dagster
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+      - ../../flows:/opt/dagster/app
+    depends_on:
+      postgres:
+        condition: service_healthy
