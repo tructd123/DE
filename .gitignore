@@ -22,3 +22,5 @@ flows/dbt_project/profiles.yml
 # Các file hệ điều hành và IDE
 .DS_Store
 .vscode/
+data_lake/
+*.csv

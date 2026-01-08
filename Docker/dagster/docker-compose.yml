@@ -1,60 +1,153 @@
+# Docker Compose for Dagster Data Pipeline
+# Hệ thống điều phối dữ liệu với Dagster
+
 volumes:
   postgres-data:
     driver: local
   dagster-home:
     driver: local
+  taxi-data:
+    driver: local
 
 services:
+  # ==========================================================================
+  # DATABASE SERVICES
+  # ==========================================================================
+  
+  # Database cho metadata của Dagster
   postgres:
     image: postgres:15
+    container_name: dagster_postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: dagster
       POSTGRES_USER: dagster
       POSTGRES_PASSWORD: dagster
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - dagster_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
+      test: ["CMD", "pg_isready", "-U", "dagster"]
+      interval: 10s
+      retries: 5
 
+  # Database cho dữ liệu taxi (Data Warehouse)
+  postgres_taxi:
+    image: postgres:15
+    container_name: postgres_taxi
+    environment:
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: k3str4
+      POSTGRES_DB: postgres-taxi
+    ports:
+      - "5433:5432"
+    volumes:
+      - taxi-data:/var/lib/postgresql/data
+    networks:
+      - dagster_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kestra", "-d", "postgres-taxi"]
+      interval: 10s
+      retries: 5
+
+  # ==========================================================================
+  # DAGSTER SERVICES
+  # ==========================================================================
+  
+  # Service chạy code pipeline (gRPC Server)
+  dagster_user_code:
+    build:
+      context: ../../pipelines
+      dockerfile: Dockerfile
+    container_name: dagster_user_code
+    command: dagster api grpc -h 0.0.0.0 -p 4000 -m definitions
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      DAGSTER_CURRENT_IMAGE: dagster_user_code
+      # PostgreSQL connection for taxi data
+      POSTGRES_HOST: postgres_taxi
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: postgres-taxi
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: k3str4
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+      - ../../pipelines:/opt/dagster/app
+      - ../../data_lake:/opt/dagster/data_lake
+    networks:
+      - dagster_network
+    healthcheck:
+      test: ["CMD", "dagster", "api", "grpc-health-check", "-p", "4000"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      postgres_taxi:
+        condition: service_healthy
+
+  # Dagster Webserver (UI)
   dagster_webserver:
     build:
-      context: ../../flows
+      context: ../../pipelines
       dockerfile: Dockerfile
-    command: dagster-webserver -h 0.0.0.0 -p 3000 
+    container_name: dagster_webserver
+    command: dagster-webserver -h 0.0.0.0 -p 3000 -w /opt/dagster/app/workspace.yaml
     environment:
       DAGSTER_HOME: /opt/dagster/dagster_home
       DAGSTER_PG_HOST: postgres
-      DAGSTER_PG_PORT: "5432"
-      DAGSTER_PG_DATABASE: dagster
-      DAGSTER_PG_USER: dagster
-      DAGSTER_PG_PASSWORD: dagster
     volumes:
       - dagster-home:/opt/dagster/dagster_home
-      - ../../flows:/opt/dagster/app
+      - ../../pipelines:/opt/dagster/app
     ports:
       - "3000:3000"
+    networks:
+      - dagster_network
     depends_on:
       postgres:
         condition: service_healthy
+      dagster_user_code:
+        condition: service_healthy
 
+  # Dagster Daemon (Schedules & Sensors)
   dagster_daemon:
     build:
-      context: ../../flows
+      context: ../../pipelines
       dockerfile: Dockerfile
+    container_name: dagster_daemon
     command: dagster-daemon run
     environment:
       DAGSTER_HOME: /opt/dagster/dagster_home
       DAGSTER_PG_HOST: postgres
-      DAGSTER_PG_PORT: "5432"
-      DAGSTER_PG_DATABASE: dagster
-      DAGSTER_PG_USER: dagster
-      DAGSTER_PG_PASSWORD: dagster
     volumes:
       - dagster-home:/opt/dagster/dagster_home
-      - ../../flows:/opt/dagster/app
+      - ../../pipelines:/opt/dagster/app
+    networks:
+      - dagster_network
     depends_on:
       postgres:
         condition: service_healthy
+      dagster_user_code:
+        condition: service_healthy
+
+  # ==========================================================================
+  # MANAGEMENT TOOLS
+  # ==========================================================================
+  
+  # pgAdmin - Giao diện quản trị PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - dagster_network
+    depends_on:
+      - postgres_taxi 
+
+networks:
+  dagster_network:
+    driver: bridge

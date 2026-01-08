@@ -1,0 +1,18 @@
+# Core Dagster library
+dagster
+dagster-postgres
+
+# For webserver UI
+dagster-webserver
+
+# dbt integration
+dagster-dbt
+dbt-core>=1.7.0
+dbt-postgres>=1.7.0
+
+# Data processing
+pandas
+requests
+psycopg2-binary
+pyarrow
+sqlalchemy

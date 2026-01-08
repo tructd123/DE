@@ -1,0 +1,19 @@
+# Exclude local environment file
+.env
+
+# Exclude virtual environment
+venv/
+.venv/
+
+# Exclude Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Exclude local dagster home
+local_home/
+
+# Exclude dbt packages (will be installed separately)
+dbt_project/dbt_packages/
+dbt_project/target/
+dbt_project/logs/
